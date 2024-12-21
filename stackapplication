@@ -1,0 +1,47 @@
+pipeline {
+    parameters {
+        choice(choices: ['master', 'development', 'qa'], name: 'Branchname', description: 'Select the branch to build')
+        string(defaultValue: 'joshna', name: 'personname', description: 'Enter your name')
+    }
+
+    agent {
+        label 'nodes'
+    }
+
+    tools {
+        maven 'maven3.9.9' // Ensure 'maven3.9.9' is correctly configured in Jenkins
+    }
+
+    triggers {
+        pollSCM('* * * * *') // Polls SCM every minute
+    }
+
+    options {
+        timestamps() // Adds timestamps to console output
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: "${params.Branchname}", 
+                    credentialsId: '24d05690-2a44-4171-8a96-92709ed48b51', 
+                    url: 'https://github.com/DasiripalliJoshna/maven-web-application.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully for ${params.personname}!"
+        }
+        failure {
+            echo "Pipeline failed for ${params.personname}. Please check the logs."
+        }
+    }
+}
